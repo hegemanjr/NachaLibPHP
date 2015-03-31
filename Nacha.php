@@ -38,8 +38,8 @@ class NachaFile {
     private $filemodifier ='A';
     private $originatingBank;
     private $companyName;
-    private $scc = '200';
-    private $sec = 'PPD';
+    private $scc = '200';//200 Debits and Credits, 220 Credits only, 225 Debits only
+    private $sec = 'PPD';//CCD for companies PPD for personal accounts
     private $description = 'PAYMENT';
     private $descriptionDate;
     private $entryDate;
@@ -63,7 +63,7 @@ class NachaFile {
     // Takes money from someone else account and puts it in yours
     public function addDebit($paymentinfo){
         if(!is_array($paymentinfo))return false;
-        if(!$paymentinfo['Transcode']){
+        if(!isset($paymentinfo['Transcode'])){
             if($paymentinfo['AccountType']){
                 if($paymentinfo['AccountType'] == 'CHECKING'){
                     $paymentinfo['Transcode'] = '27';
@@ -83,7 +83,7 @@ class NachaFile {
     // Takes money from your account and puts it into someone elses.
     public function addCredit($paymentinfo){
         if(!is_array($paymentinfo))return false;
-        if(!$paymentinfo['Transcode']){
+        if(!isset($paymentinfo['Transcode'])){
             if($paymentinfo['AccountType']){
                 if($paymentinfo['AccountType'] == 'CHECKING'){
                     $paymentinfo['Transcode'] = '22';
@@ -189,7 +189,7 @@ class NachaFile {
 
     public function setDescription($des=false, $date=false){
         if($des)$this->description = $des;
-        if($date)$this->descriptionDate = date('M d',strtotime($date));
+        if($date)$this->descriptionDate = date('ymd',strtotime($date));
         return $this;
     }
 
