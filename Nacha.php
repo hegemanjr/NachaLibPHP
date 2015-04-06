@@ -60,20 +60,33 @@ class NachaFile {
     private $referencecode = '        ';
     public $fileContents = '';
     public $paymenttypecode = '';
-    // Takes money from someone else account and puts it in yours
+   // Takes money from someone else account and puts it in yours
     public function addDebit($paymentinfo){
         if(!is_array($paymentinfo))return false;
+		//if Transcode not set
         if(!isset($paymentinfo['Transcode'])){
+        	//if AccountType is set
             if($paymentinfo['AccountType']){
-                if($paymentinfo['AccountType'] == 'CHECKING'){
-                    $paymentinfo['Transcode'] = '27';
-                }elseif($paymentinfo['AccountType'] == 'SAVINGS'){
-                    $paymentinfo['Transcode'] = '37';
-                }else{
-                    return false;
-                }
+            	//if zero-dollar tran (PreNote)
+				if($paymentinfo['TotalAmount'] == 0){
+					if($paymentinfo['AccountType'] == 'CHECKING'){
+	                    $paymentinfo['Transcode'] = '28';//prenote debit checking
+	                }elseif($paymentinfo['AccountType'] == 'SAVINGS'){
+	                    $paymentinfo['Transcode'] = '38';//prenote debit savings
+	                }else{
+	                    return false;
+	                }
+				}else{
+	                if($paymentinfo['AccountType'] == 'CHECKING'){
+	                    $paymentinfo['Transcode'] = '27';
+	                }elseif($paymentinfo['AccountType'] == 'SAVINGS'){
+	                    $paymentinfo['Transcode'] = '37';
+	                }else{
+	                    return false;
+	                }
+				}
             }else{
-                $paymentinfo['Transcode'] = '27';
+                $paymentinfo['Transcode'] = '27';//I'm not sure if I like this catchall transcode
             }
         }
         $this->addDetailLine($paymentinfo);
@@ -83,17 +96,30 @@ class NachaFile {
     // Takes money from your account and puts it into someone elses.
     public function addCredit($paymentinfo){
         if(!is_array($paymentinfo))return false;
+		//if(!$paymentinfo['Transcode']){ // replaced with "isset" verion, without it, it doesn't work
         if(!isset($paymentinfo['Transcode'])){
             if($paymentinfo['AccountType']){
-                if($paymentinfo['AccountType'] == 'CHECKING'){
-                    $paymentinfo['Transcode'] = '22';
-                }elseif($paymentinfo['AccountType'] == 'SAVINGS'){
-                    $paymentinfo['Transcode'] = '32';
-                }else{
-                    return false;
-                }
+            	//if zero-dollar tran (PreNote)
+				if($paymentinfo['TotalAmount'] == 0){
+					if($paymentinfo['AccountType'] == 'CHECKING'){
+	                    $paymentinfo['Transcode'] = '23';//prenote credit checking
+	                }elseif($paymentinfo['AccountType'] == 'SAVINGS'){
+	                    $paymentinfo['Transcode'] = '33';//prenote credit savings
+	                }else{
+	                    return false;
+	                }
+				}else{
+	                
+	                if($paymentinfo['AccountType'] == 'CHECKING'){
+	                    $paymentinfo['Transcode'] = '22';
+	                }elseif($paymentinfo['AccountType'] == 'SAVINGS'){
+	                    $paymentinfo['Transcode'] = '32';
+	                }else{
+	                    return false;
+	                }
+				}					
             }else{
-                $paymentinfo['Transcode'] = '22';
+                $paymentinfo['Transcode'] = '22';//I'm not sure if I like this catchall transcode
             }
         }
         $this->addDetailLine($paymentinfo);
@@ -101,7 +127,7 @@ class NachaFile {
     }
 
     private function addDetailLine($paymentinfo){
-        if(!$paymentinfo['AccountNumber'] || !$paymentinfo['TotalAmount'] || !$paymentinfo['BankAccountNumber'] || !$paymentinfo['RoutingNumber'] || !$paymentinfo['FormattedName'] || !$paymentinfo['AccountType']){
+        if(!$paymentinfo['AccountNumber'] || !isset($paymentinfo['TotalAmount']) || !$paymentinfo['BankAccountNumber'] || !$paymentinfo['RoutingNumber'] || !$paymentinfo['FormattedName'] || !$paymentinfo['AccountType']){
             return false;
         }
         $paymentinfo['TranId'] = $this->tranid+1;
@@ -189,6 +215,7 @@ class NachaFile {
 
     public function setDescription($des=false, $date=false){
         if($des)$this->description = $des;
+       // if($date)$this->descriptionDate = date('M d',strtotime($date));// Was incorrect date format
         if($date)$this->descriptionDate = date('ymd',strtotime($date));
         return $this;
     }
